@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -272,18 +273,19 @@
       ]},
   ];
 
+  // ✅ FIXED: uses ${MY_NAME} (not an undefined variable)
   const FINAL_LETTER = `
 <h2>To my baby 💗</h2>
 
 <p>
-I made this little game for you because I wanted to give you something that feels like me
+I made this little game for you because I wanted to give you something that feels like me —
 something I could build with time and intention, just to see you smile.
-From the first day I met you, you’ve been amazing to me like genuinely.
+From the first day I met you, you’ve been amazing to me… like genuinely.
 </p>
 
 <p>
-And babe, I love how you console me. I love the way you calm me down and make me feel understood.
-I know I’m not perfect I mess up, I overthink, I can be a lot sometimes
+And babe… I love how you console me. I love the way you calm me down and make me feel understood.
+I know I’m not perfect — I mess up, I overthink, I can be a lot sometimes —
 and you still choose to love me. You still put up with me, and you still care.
 That means more to me than I can even explain.
 </p>
@@ -291,7 +293,7 @@ That means more to me than I can even explain.
 <p>
 You’re so amazing for loving me the way you do, baby.
 I love you. I love you so much.
-And I’m always going to try to be better for you not because you demand it,
+And I’m always going to try to be better for you — not because you demand it,
 but because you deserve the best version of me.
 </p>
 
@@ -299,7 +301,7 @@ but because you deserve the best version of me.
 I love you, babe. I love you, baby. Always.
 </p>
 
-<div class="signature">Love,<br/>${Nitish} 💘</div>
+<div class="signature">Love,<br/>${MY_NAME} 💘</div>
 `.trim();
   // ====== END CUSTOMIZE ======
 
@@ -351,11 +353,11 @@ I love you, babe. I love you, baby. Always.
   const G = 2200;
   const MOVE = 2200;
   const MAXVX = 320;
-  const JUMP = 820; // slightly higher for nicer platforming
+  const JUMP = 820;
   const AIR_CONTROL = 0.75;
   const GROUND_FRICTION = 0.82;
 
-  // Player hitbox (stable even if sprite is tall)
+  // Player hitbox
   const player = {
     x:60, y:0,
     w:34, h:64,
@@ -394,7 +396,7 @@ I love you, babe. I love you, baby. Always.
       spawn:{x:60,y:440},
       goal:{x:900,y:460,w:26,h:54},
       platforms: [{x:0,y:520,w:960,h:40}],
-      movingPlatforms: [],   // MOVING PLATFORMS LIVE HERE
+      movingPlatforms: [],
       spikes: []
     };
   }
@@ -434,10 +436,9 @@ I love you, babe. I love you, baby. Always.
     L.platforms.push(
       {x:130,y:470,w:180,h:18},
       {x:360,y:430,w:170,h:18},
-      {x:580,y:390,w:170,h:18},
+      {x:580,y:390,w:170,h:18}
     );
 
-    // Vertical moving platform elevator
     L.movingPlatforms.push({
       x: 760, y: 340, w: 140, h: 18,
       baseX: 760, baseY: 340,
@@ -446,7 +447,6 @@ I love you, babe. I love you, baby. Always.
       speed: 1.6
     });
 
-    // Final ledge
     L.platforms.push({x:820,y:260,w:140,h:18});
 
     L.spikes.push(
@@ -493,13 +493,12 @@ I love you, babe. I love you, baby. Always.
     levelText.textContent = n;
     level = LEVELS[n-1];
 
-    // reset moving platform internal deltas
     if(level.movingPlatforms){
       for(const mp of level.movingPlatforms){
         mp.t = mp.t || 0;
         mp.dx = 0; mp.dy = 0;
-        mp.x = mp.x ?? mp.baseX;
-        mp.y = mp.y ?? mp.baseY;
+        mp.x = (mp.x !== undefined) ? mp.x : mp.baseX;
+        mp.y = (mp.y !== undefined) ? mp.y : mp.baseY;
       }
     }
 
@@ -543,7 +542,6 @@ I love you, babe. I love you, baby. Always.
           player.jumpsLeft = 2;
           djText.textContent = player.jumpsLeft;
 
-          // ride moving platforms
           if ((level.movingPlatforms || []).includes(p)) {
             player.x += (p.dx || 0);
             player.y += (p.dy || 0);
@@ -657,10 +655,8 @@ I love you, babe. I love you, baby. Always.
   function step(dt){
     if(!STATE.running) return;
 
-    // update moving platforms first
     updateMovingPlatforms(dt);
 
-    // horizontal input
     let ax = 0;
     if(isDown("ArrowLeft") || isDown("a")) ax -= 1;
     if(isDown("ArrowRight")|| isDown("d")) ax += 1;
@@ -673,11 +669,9 @@ I love you, babe. I love you, baby. Always.
       player.vx *= Math.pow(GROUND_FRICTION, dt*60);
     }
 
-    // gravity
     player.vy += G * dt;
     player.vy = Math.min(player.vy, 1100);
 
-    // jump (edge-triggered)
     const j = wantsJump();
     if(j && !jumpLatch){
       if(player.jumpsLeft > 0){
@@ -689,16 +683,11 @@ I love you, babe. I love you, baby. Always.
     }
     jumpLatch = j;
 
-    // resolve collisions
     resolvePlatforms(dt);
 
-    // fell off map
     if(player.y > canvas.height + 150) die();
-
-    // spikes
     if(hitSpikes()) die();
 
-    // goal
     if(hitGoal()){
       STATE.running = false;
       const cleared = STATE.level;
@@ -711,7 +700,6 @@ I love you, babe. I love you, baby. Always.
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // tiny stars
     for(let i=0;i<70;i++){
       const x = (i*113) % canvas.width;
       const y = (i*61) % canvas.height;
@@ -721,10 +709,8 @@ I love you, babe. I love you, baby. Always.
     }
     ctx.globalAlpha = 1;
 
-    // platforms + moving platforms
     for(const p of allPlatforms()){
       const isMoving = (level.movingPlatforms || []).includes(p);
-
       ctx.fillStyle = isMoving ? "rgba(124,92,255,.18)" : "rgba(255,255,255,.10)";
       ctx.fillRect(p.x,p.y,p.w,p.h);
 
@@ -732,7 +718,6 @@ I love you, babe. I love you, baby. Always.
       ctx.strokeRect(p.x,p.y,p.w,p.h);
     }
 
-    // spikes
     for(const s of level.spikes){
       ctx.fillStyle = "rgba(255,77,125,.70)";
       const spikes = Math.max(2, Math.floor(s.w/16));
@@ -748,7 +733,6 @@ I love you, babe. I love you, baby. Always.
       }
     }
 
-    // goal door
     const g = level.goal;
     const glow = 0.45 + 0.25*Math.sin(performance.now()/220);
     ctx.fillStyle = `rgba(124,92,255,${0.25+glow*0.25})`;
@@ -758,7 +742,6 @@ I love you, babe. I love you, baby. Always.
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.fillRect(g.x+g.w-8, g.y+g.h/2-6, 5, 10);
 
-    // PLAYER sprite aligned to hitbox feet
     if(spriteReady){
       const drawW = 80;
       const drawH = 150;
@@ -774,7 +757,6 @@ I love you, babe. I love you, baby. Always.
       ctx.fillRect(player.x, player.y, player.w, player.h);
     }
 
-    // HUD
     ctx.fillStyle = "rgba(243,246,255,.82)";
     ctx.font = "950 14px ui-sans-serif, system-ui";
     ctx.fillText(`Level ${STATE.level} • Jump: Space • Double Jump: yes`, 14, 24);
@@ -801,7 +783,6 @@ I love you, babe. I love you, baby. Always.
     requestAnimationFrame(loop);
   }
 
-  // Key handlers
   window.addEventListener("keydown", (e) => {
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     keys.add(k);
@@ -830,7 +811,6 @@ I love you, babe. I love you, baby. Always.
     beep(520, 0.05, "sine", 0.03);
   });
 
-  // Init
   loadLevel(1);
   deathText.textContent = 0;
   requestAnimationFrame(loop);

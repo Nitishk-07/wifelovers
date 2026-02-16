@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Baby Quest 💘</title>
+  <style>
+    :root{
+      --bg1:#0b1020; --bg2:#141a33;
+      --card: rgba(255,255,255,.08);
+      --text:#f3f6ff; --muted: rgba(243,246,255,.7);
+      --accent:#ff4d7d; --accent2:#7c5cff;
+      --good:#42ffb7;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 15%, #1a2a6c33, transparent 60%),
+        radial-gradient(900px 600px at 80% 20%, #ff4d7d22, transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .wrap{
+      width:min(1020px, 100%);
+      display:grid;
+      grid-template-columns: 1fr 340px;
+      gap:14px;
+    }
+    @media (max-width: 900px){ .wrap{grid-template-columns: 1fr;} }
+
+    .panel{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.05));
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      background: linear-gradient(90deg, rgba(255,77,125,.12), rgba(124,92,255,.10));
+    }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:950; letter-spacing:.2px;}
+    .pill{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+    }
+    canvas{
+      width:100%;
+      height:560px;
+      display:block;
+      background:
+        radial-gradient(900px 500px at 30% 20%, rgba(255,77,125,.12), transparent 60%),
+        radial-gradient(700px 450px at 70% 40%, rgba(124,92,255,.10), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    }
+    .side{padding:14px; display:flex; flex-direction:column; gap:12px;}
+    .card{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:14px;
+    }
+    .card h3{margin:0 0 6px 0; font-size:14px; color: var(--muted); font-weight:900;}
+    .big{font-size:26px; font-weight:1000; letter-spacing:.3px; margin:4px 0 0 0;}
+    .hint{margin:10px 0 0 0; color: var(--muted); font-size:13px; line-height:1.35;}
+    .kbd{
+      display:inline-block; padding:2px 7px; border-radius:8px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      font-weight:950; font-size:12px;
+    }
+    .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    .btn{
+      cursor:pointer; border:none; border-radius:12px;
+      padding:10px 12px; font-weight:950; color:var(--text);
+      background: linear-gradient(90deg, rgba(255,77,125,.9), rgba(124,92,255,.85));
+      box-shadow: 0 10px 26px rgba(255,77,125,.18);
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow:none;
+    }
+
+    /* Modal */
+    .overlay{
+      position:fixed; inset:0; display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      z-index:50;
+    }
+    .overlay.show{display:flex;}
+    .modal{
+      width:min(720px, 100%);
+      background: linear-gradient(180deg, rgba(25,30,55,.92), rgba(12,14,30,.92));
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      box-shadow: 0 26px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .modal-head{
+      padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid rgba(255,255,255,.1);
+      background: linear-gradient(90deg, rgba(255,77,125,.16), rgba(124,92,255,.12));
+    }
+    .modal-title{font-weight:1000; letter-spacing:.3px;}
+    .modal-body{padding:16px;}
+    .q{font-size:18px; font-weight:1000; margin:0 0 10px 0;}
+    .choices{display:grid; gap:10px; margin-top:10px;}
+    .choice{
+      text-align:left; padding:12px 12px; border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      cursor:pointer; font-weight:950;
+    }
+    .feedback{
+      margin-top:12px; padding:12px; border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      display:none;
+    }
+    .feedback.show{display:block;}
+    .feedback.good{border-color: rgba(66,255,183,.25); color: rgba(230,255,246,.95);}
+
+    /* Final letter + flower */
+    .letter{padding:18px; line-height:1.55; color: rgba(243,246,255,.92); font-size:15px;}
+    .letter h2{margin:0 0 10px 0; font-size:22px; letter-spacing:.2px;}
+    .signature{margin-top:14px; font-weight:1000; letter-spacing:.2px;}
+    .flower{width:120px;height:120px;margin: 16px auto 6px;position:relative;filter: drop-shadow(0 18px 18px rgba(0,0,0,.35));}
+    .petal{position:absolute;width:58px;height:58px;border-radius: 18px 58px 18px 58px;
+      background: radial-gradient(circle at 30% 30%, #ffd1df, #ff4d7d 60%, #b31545);
+      top: 31px; left: 31px; transform-origin: 29px 29px;}
+    .petal:nth-child(1){transform: rotate(0deg) translateX(26px);}
+    .petal:nth-child(2){transform: rotate(60deg) translateX(26px);}
+    .petal:nth-child(3){transform: rotate(120deg) translateX(26px);}
+    .petal:nth-child(4){transform: rotate(180deg) translateX(26px);}
+    .petal:nth-child(5){transform: rotate(240deg) translateX(26px);}
+    .petal:nth-child(6){transform: rotate(300deg) translateX(26px);}
+    .center{position:absolute;width:34px;height:34px;border-radius:50%;left:43px;top:43px;
+      background: radial-gradient(circle at 35% 35%, #fff2b0, #ffcf5a 60%, #c27b12);
+      border:1px solid rgba(255,255,255,.2);}
+    .stem{width:10px;height:70px;margin: 0 auto;background: linear-gradient(180deg, #43ffb7, #0ea56f);
+      border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);}
+    .leaf{width:34px;height:18px;margin: -40px auto 0;background: linear-gradient(180deg, #43ffb7, #0ea56f);
+      border-radius: 0 20px 20px 20px; transform: rotate(-20deg) translateX(-18px);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <div class="topbar">
+        <div class="brand">🕹️ Baby Quest <span class="pill" id="statusPill">Press Start</span></div>
+        <div class="pill">A/D • Jump (Space) • Double Jump</div>
+      </div>
+      <canvas id="game" width="960" height="560"></canvas>
+    </div>
+
+    <div class="panel side">
+      <div class="card">
+        <h3>Level</h3>
+        <div class="big"><span id="levelText">1</span> / 10</div>
+        <div class="hint">Reach the glowing door. Avoid spikes 💀</div>
+      </div>
+
+      <div class="card">
+        <h3>Controls</h3>
+        <p class="hint" style="margin:0">
+          Move: <span class="kbd">A</span> <span class="kbd">D</span> or <span class="kbd">←</span> <span class="kbd">→</span><br/>
+          Jump: <span class="kbd">Space</span> / <span class="kbd">W</span> / <span class="kbd">↑</span><br/>
+          Restart level: <span class="kbd">R</span>
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Status</h3>
+        <div class="hint" style="margin:0">
+          Deaths (this run): <b id="deathText">0</b><br/>
+          Jumps left: <b id="djText">2</b>
+        </div>
+        <div class="row">
+          <button class="btn" id="startBtn">Start</button>
+          <button class="btn secondary" id="muteBtn">🔊 Sound</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title" id="modalTitle">Between Levels 💬</div>
+        <div class="pill" id="modalPill">Question</div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ====== CUSTOMIZE ======
+  const MY_NAME = "Nitish"; // change if needed
+
+  // Sweet questions between levels (after levels 1..9)
+  const QUESTIONS = [
+    { q:`Baby… before the next level 💗 what do you want from me most?`,
+      choices:[
+        {text:"Reassurance", reply:"Always. I’m here, and I love you."},
+        {text:"Patience", reply:"I’ll be patient with you every time, babe."},
+        {text:"Consistency", reply:"I choose you every day. Always."}
+      ]},
+    { q:`Babe, what makes you feel the most loved?`,
+      choices:[
+        {text:"Sweet words", reply:"Then I’ll keep saying it: I love you, baby."},
+        {text:"Little efforts", reply:"I’ll keep showing up for you."},
+        {text:"Quality time", reply:"Just you and me… that’s my favorite."}
+      ]},
+    { q:`Pick one promise you want from me:`,
+      choices:[
+        {text:"I’ll listen", reply:"I’ll listen fully. Always."},
+        {text:"I’ll stay gentle", reply:"Always soft with you, baby."},
+        {text:"I’ll choose you", reply:"Every time. No question."}
+      ]},
+    { q:`Baby… if you’re stressed, what should I say?`,
+      choices:[
+        {text:"Breathe, I’m here.", reply:"Breathe, babe. I’m right here."},
+        {text:"I’m proud of you.", reply:"I’m proud of you every day."},
+        {text:"I love you.", reply:"I love you. Always. That’s it."}
+      ]},
+    { q:`Babe, what’s our vibe?`,
+      choices:[
+        {text:"Best friends + lovers", reply:"Exactly. My favorite person."},
+        {text:"Home", reply:"You feel like home to me, baby."},
+        {text:"Team", reply:"You and me vs everything."}
+      ]},
+    { q:`Baby, what message do you want randomly?`,
+      choices:[
+        {text:"I love you 💗", reply:"I love you so much, babe."},
+        {text:"I miss you", reply:"I miss you too—more than I can say."},
+        {text:"Thinking of you", reply:"I’m always thinking of you."}
+      ]},
+    { q:`Babe… what do you want to hear when I mess up?`,
+      choices:[
+        {text:"We’ll be okay", reply:"We will be okay. I’m staying."},
+        {text:"Just be real with me", reply:"Always. Honest and loving."},
+        {text:"Try again", reply:"I’ll try again for you, every time."}
+      ]},
+    { q:`Baby, what do you deserve?`,
+      choices:[
+        {text:"The best", reply:"You do. And I’m going to keep trying to be better for you."},
+        {text:"Peace", reply:"I want to be your peace."},
+        {text:"Love that’s real", reply:"That’s what I’m giving you. Real love."}
+      ]},
+    { q:`Almost there 💘 what are you unlocking?`,
+      choices:[
+        {text:"A love letter", reply:"Good… I wrote it for you, baby."},
+        {text:"A flower + note", reply:"Anything for you, babe."},
+        {text:"My whole heart", reply:"You already have it."}
+      ]},
+  ];
+
+  const FINAL_LETTER = `
+<h2>To my baby 💗</h2>
+
+<p>
+I made this little game for you because I wanted to give you something that feels like me
+something I could build with time and intention, just to see you smile.
+From the first day I met you, you’ve been amazing to me like genuinely.
+</p>
+
+<p>
+And babe, I love how you console me. I love the way you calm me down and make me feel understood.
+I know I’m not perfect I mess up, I overthink, I can be a lot sometimes
+and you still choose to love me. You still put up with me, and you still care.
+That means more to me than I can even explain.
+</p>
+
+<p>
+You’re so amazing for loving me the way you do, baby.
+I love you. I love you so much.
+And I’m always going to try to be better for you not because you demand it,
+but because you deserve the best version of me.
+</p>
+
+<p>
+I love you, babe. I love you, baby. Always.
+</p>
+
+<div class="signature">Love,<br/>${Nitish} 💘</div>
+`.trim();
+  // ====== END CUSTOMIZE ======
+
+  const sprite = new Image();
+  sprite.src = "./rina1.png";
+  let spriteReady = false;
+  sprite.onload = () => { spriteReady = true; };
+
+  // UI
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const levelText = document.getElementById("levelText");
+  const statusPill = document.getElementById("statusPill");
+  const startBtn = document.getElementById("startBtn");
+  const muteBtn = document.getElementById("muteBtn");
+  const overlay = document.getElementById("overlay");
+  const modalBody = document.getElementById("modalBody");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalPill = document.getElementById("modalPill");
+  const deathText = document.getElementById("deathText");
+  const djText = document.getElementById("djText");
+
+  const keys = new Set();
+  let audioCtx = null;
+
+  const STATE = {
+    running:false,
+    muted:false,
+    level:1,
+    maxLevel:10,
+    deaths:0,
+    lastT:0
+  };
+
+  function beep(freq=520, dur=0.06, type="sine", vol=0.03){
+    if (STATE.muted) return;
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.value = vol;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + dur);
+    }catch(e){}
+  }
+
+  // Physics (Mario-ish)
+  const G = 2200;
+  const MOVE = 2200;
+  const MAXVX = 320;
+  const JUMP = 820; // slightly higher for nicer platforming
+  const AIR_CONTROL = 0.75;
+  const GROUND_FRICTION = 0.82;
+
+  // Player hitbox (stable even if sprite is tall)
+  const player = {
+    x:60, y:0,
+    w:34, h:64,
+    vx:0, vy:0,
+    onGround:false,
+    jumpsLeft:2
+  };
+
+  // ===== Moving platform helpers =====
+  function allPlatforms(){
+    return level.platforms.concat(level.movingPlatforms || []);
+  }
+
+  function updateMovingPlatforms(dt){
+    if(!level.movingPlatforms) return;
+
+    for(const mp of level.movingPlatforms){
+      mp.t = (mp.t || 0) + dt;
+      const prevX = mp.x;
+      const prevY = mp.y;
+
+      if(mp.type === "horizontal"){
+        mp.x = mp.baseX + Math.sin(mp.t * mp.speed) * mp.amp;
+      } else if(mp.type === "vertical"){
+        mp.y = mp.baseY + Math.sin(mp.t * mp.speed) * mp.amp;
+      }
+
+      mp.dx = mp.x - prevX;
+      mp.dy = mp.y - prevY;
+    }
+  }
+
+  // ===== Levels =====
+  function makeLevelBase(){
+    return {
+      spawn:{x:60,y:440},
+      goal:{x:900,y:460,w:26,h:54},
+      platforms: [{x:0,y:520,w:960,h:40}],
+      movingPlatforms: [],   // MOVING PLATFORMS LIVE HERE
+      spikes: []
+    };
+  }
+
+  function L1(){ const L=makeLevelBase();
+    L.platforms.push({x:160,y:460,w:140,h:18},{x:360,y:410,w:150,h:18},{x:580,y:360,w:150,h:18});
+    L.spikes.push({x:300,y:504,w:60,h:16});
+    return L;
+  }
+  function L2(){ const L=makeLevelBase();
+    L.platforms.push({x:150,y:470,w:140,h:18},{x:340,y:430,w:140,h:18},{x:530,y:390,w:140,h:18},{x:720,y:350,w:170,h:18});
+    L.spikes.push({x:390,y:504,w:70,h:16},{x:540,y:504,w:70,h:16});
+    return L;
+  }
+  function L3(){ const L=makeLevelBase();
+    L.platforms.push({x:150,y:470,w:150,h:18},{x:350,y:470,w:150,h:18},{x:550,y:470,w:150,h:18},{x:750,y:470,w:150,h:18});
+    L.spikes.push({x:310,y:504,w:40,h:16},{x:510,y:504,w:40,h:16},{x:710,y:504,w:40,h:16});
+    return L;
+  }
+  function L4(){ const L=makeLevelBase();
+    L.platforms.push({x:140,y:460,w:180,h:18},{x:390,y:400,w:200,h:18},{x:650,y:340,w:200,h:18});
+    L.spikes.push({x:330,y:504,w:110,h:16});
+    L.goal = {x:880,y:286,w:26,h:54};
+    return L;
+  }
+  function L5(){ const L=makeLevelBase();
+    L.platforms.push({x:120,y:470,w:130,h:18},{x:290,y:430,w:110,h:18},{x:430,y:390,w:110,h:18},
+                     {x:570,y:350,w:110,h:18},{x:710,y:310,w:130,h:18});
+    L.spikes.push({x:250,y:504,w:50,h:16},{x:470,y:504,w:70,h:16},{x:650,y:504,w:70,h:16});
+    L.goal = {x:860,y:256,w:26,h:54};
+    return L;
+  }
+
+  function L6(){
+    const L = makeLevelBase();
+
+    L.platforms.push(
+      {x:130,y:470,w:180,h:18},
+      {x:360,y:430,w:170,h:18},
+      {x:580,y:390,w:170,h:18},
+    );
+
+    // Vertical moving platform elevator
+    L.movingPlatforms.push({
+      x: 760, y: 340, w: 140, h: 18,
+      baseX: 760, baseY: 340,
+      type: "vertical",
+      amp: 70,
+      speed: 1.6
+    });
+
+    // Final ledge
+    L.platforms.push({x:820,y:260,w:140,h:18});
+
+    L.spikes.push(
+      {x:320,y:504,w:70,h:16},
+      {x:520,y:504,w:70,h:16}
+    );
+
+    L.goal = {x:900,y:206,w:26,h:54};
+    return L;
+  }
+
+  function L7(){ const L=makeLevelBase();
+    L.platforms.push({x:160,y:450,w:150,h:18},{x:390,y:380,w:150,h:18},{x:620,y:310,w:150,h:18},{x:800,y:240,w:150,h:18});
+    L.spikes.push({x:330,y:504,w:130,h:16},{x:560,y:504,w:130,h:16});
+    L.goal = {x:900,y:186,w:26,h:54};
+    return L;
+  }
+  function L8(){ const L=makeLevelBase();
+    L.platforms.push({x:120,y:480,w:120,h:18},{x:280,y:430,w:120,h:18},{x:440,y:380,w:120,h:18},
+                     {x:600,y:330,w:120,h:18},{x:760,y:280,w:160,h:18});
+    L.spikes.push({x:245,y:504,w:60,h:16},{x:405,y:504,w:60,h:16},{x:565,y:504,w:60,h:16},{x:725,y:504,w:60,h:16});
+    L.goal = {x:910,y:226,w:26,h:54};
+    return L;
+  }
+  function L9(){ const L=makeLevelBase();
+    L.platforms.push({x:140,y:470,w:190,h:18},{x:390,y:470,w:190,h:18},{x:640,y:470,w:190,h:18});
+    L.platforms.push({x:270,y:360,w:130,h:18},{x:540,y:300,w:130,h:18},{x:810,y:240,w:130,h:18});
+    L.spikes.push({x:340,y:504,w:90,h:16},{x:600,y:504,w:90,h:16},{x:860,y:504,w:90,h:16});
+    L.goal = {x:920,y:186,w:26,h:54};
+    return L;
+  }
+  function L10(){ const L=makeLevelBase();
+    L.platforms.push({x:150,y:460,w:150,h:18},{x:350,y:410,w:150,h:18},{x:550,y:360,w:150,h:18},{x:750,y:310,w:150,h:18});
+    L.spikes.push({x:280,y:504,w:80,h:16},{x:460,y:504,w:80,h:16},{x:640,y:504,w:80,h:16},{x:820,y:504,w:80,h:16});
+    L.goal = {x:900,y:256,w:26,h:54};
+    return L;
+  }
+
+  const LEVELS = [L1(),L2(),L3(),L4(),L5(),L6(),L7(),L8(),L9(),L10()];
+  let level = LEVELS[0];
+
+  function loadLevel(n){
+    STATE.level = n;
+    levelText.textContent = n;
+    level = LEVELS[n-1];
+
+    // reset moving platform internal deltas
+    if(level.movingPlatforms){
+      for(const mp of level.movingPlatforms){
+        mp.t = mp.t || 0;
+        mp.dx = 0; mp.dy = 0;
+        mp.x = mp.x ?? mp.baseX;
+        mp.y = mp.y ?? mp.baseY;
+      }
+    }
+
+    player.x = level.spawn.x;
+    player.y = level.spawn.y;
+    player.vx = 0;
+    player.vy = 0;
+    player.onGround = false;
+    player.jumpsLeft = 2;
+    djText.textContent = player.jumpsLeft;
+
+    statusPill.textContent = "Level " + n;
+  }
+
+  // ===== Collision =====
+  function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh){
+    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+  }
+
+  function resolvePlatforms(dt){
+    // X move
+    player.x += player.vx * dt;
+    for(const p of allPlatforms()){
+      if(rectsOverlap(player.x, player.y, player.w, player.h, p.x,p.y,p.w,p.h)){
+        if(player.vx > 0) player.x = p.x - player.w;
+        else if(player.vx < 0) player.x = p.x + p.w;
+        player.vx = 0;
+      }
+    }
+
+    // Y move
+    player.y += player.vy * dt;
+    player.onGround = false;
+
+    for(const p of allPlatforms()){
+      if(rectsOverlap(player.x, player.y, player.w, player.h, p.x,p.y,p.w,p.h)){
+        if(player.vy > 0){
+          player.y = p.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+          player.jumpsLeft = 2;
+          djText.textContent = player.jumpsLeft;
+
+          // ride moving platforms
+          if ((level.movingPlatforms || []).includes(p)) {
+            player.x += (p.dx || 0);
+            player.y += (p.dy || 0);
+          }
+        } else if(player.vy < 0){
+          player.y = p.y + p.h;
+          player.vy = 0;
+        }
+      }
+    }
+  }
+
+  function hitSpikes(){
+    for(const s of level.spikes){
+      if(rectsOverlap(player.x, player.y, player.w, player.h, s.x,s.y,s.w,s.h)) return true;
+    }
+    return false;
+  }
+
+  function hitGoal(){
+    const g = level.goal;
+    return rectsOverlap(player.x, player.y, player.w, player.h, g.x,g.y,g.w,g.h);
+  }
+
+  function die(){
+    STATE.deaths++;
+    deathText.textContent = STATE.deaths;
+    beep(160, 0.12, "sawtooth", 0.03);
+    loadLevel(STATE.level);
+    STATE.running = true;
+  }
+
+  // ===== Modals =====
+  function showQuestion(afterLevel){
+    const qObj = QUESTIONS[afterLevel-1];
+    overlay.classList.add("show");
+    modalTitle.textContent = `Level ${afterLevel} cleared 🎉`;
+    modalPill.textContent = "Quick question";
+
+    let html = `<div class="q">${qObj.q}</div><div class="choices">`;
+    qObj.choices.forEach((c,i) => html += `<button class="choice" data-i="${i}">${c.text}</button>`);
+    html += `</div><div class="feedback" id="fb"></div>
+             <div class="row" style="margin-top:12px">
+               <button class="btn" id="cont" disabled>Continue ➜</button>
+             </div>`;
+    modalBody.innerHTML = html;
+
+    const fb = document.getElementById("fb");
+    const cont = document.getElementById("cont");
+    let answered = false;
+
+    modalBody.querySelectorAll(".choice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if(answered) return;
+        answered = true;
+        const c = qObj.choices[Number(btn.dataset.i)];
+        fb.classList.add("show","good");
+        fb.textContent = c.reply;
+        cont.disabled = false;
+        beep(740, 0.08, "triangle", 0.04);
+      });
+    });
+
+    cont.addEventListener("click", () => {
+      overlay.classList.remove("show");
+      loadLevel(afterLevel + 1);
+      STATE.running = true;
+    });
+  }
+
+  function showFinal(){
+    overlay.classList.add("show");
+    modalTitle.textContent = "YOU WON 💘";
+    modalPill.textContent = "Letter unlocked";
+
+    modalBody.innerHTML = `
+      <div class="flower" aria-hidden="true">
+        <div class="petal"></div><div class="petal"></div><div class="petal"></div>
+        <div class="petal"></div><div class="petal"></div><div class="petal"></div>
+        <div class="center"></div>
+      </div>
+      <div class="stem"></div>
+      <div class="leaf"></div>
+      <div class="letter">${FINAL_LETTER}</div>
+      <div class="row" style="justify-content:center; padding: 0 16px 16px;">
+        <button class="btn" id="replay">Replay 🎮</button>
+        <button class="btn secondary" id="close">Close</button>
+      </div>
+    `;
+
+    document.getElementById("replay").addEventListener("click", () => {
+      overlay.classList.remove("show");
+      STATE.deaths = 0;
+      deathText.textContent = 0;
+      loadLevel(1);
+      STATE.running = true;
+    });
+    document.getElementById("close").addEventListener("click", () => overlay.classList.remove("show"));
+
+    beep(880, 0.08, "sine", 0.05);
+    setTimeout(()=>beep(988, 0.08, "sine", 0.05), 120);
+    setTimeout(()=>beep(1174,0.10, "sine", 0.05), 240);
+  }
+
+  // ===== Input =====
+  function isDown(k){ return keys.has(k); }
+  function wantsJump(){ return isDown(" ") || isDown("ArrowUp") || isDown("w"); }
+  let jumpLatch = false;
+
+  // ===== Game step =====
+  function step(dt){
+    if(!STATE.running) return;
+
+    // update moving platforms first
+    updateMovingPlatforms(dt);
+
+    // horizontal input
+    let ax = 0;
+    if(isDown("ArrowLeft") || isDown("a")) ax -= 1;
+    if(isDown("ArrowRight")|| isDown("d")) ax += 1;
+
+    const control = player.onGround ? 1.0 : AIR_CONTROL;
+    player.vx += ax * MOVE * dt * control;
+    player.vx = Math.max(-MAXVX, Math.min(MAXVX, player.vx));
+
+    if(ax === 0 && player.onGround){
+      player.vx *= Math.pow(GROUND_FRICTION, dt*60);
+    }
+
+    // gravity
+    player.vy += G * dt;
+    player.vy = Math.min(player.vy, 1100);
+
+    // jump (edge-triggered)
+    const j = wantsJump();
+    if(j && !jumpLatch){
+      if(player.jumpsLeft > 0){
+        player.vy = -JUMP;
+        player.jumpsLeft--;
+        djText.textContent = player.jumpsLeft;
+        beep(680, 0.05, "sine", 0.04);
+      }
+    }
+    jumpLatch = j;
+
+    // resolve collisions
+    resolvePlatforms(dt);
+
+    // fell off map
+    if(player.y > canvas.height + 150) die();
+
+    // spikes
+    if(hitSpikes()) die();
+
+    // goal
+    if(hitGoal()){
+      STATE.running = false;
+      const cleared = STATE.level;
+      if(cleared >= STATE.maxLevel) showFinal();
+      else showQuestion(cleared);
+    }
+  }
+
+  // ===== Drawing =====
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // tiny stars
+    for(let i=0;i<70;i++){
+      const x = (i*113) % canvas.width;
+      const y = (i*61) % canvas.height;
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(x, y, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    // platforms + moving platforms
+    for(const p of allPlatforms()){
+      const isMoving = (level.movingPlatforms || []).includes(p);
+
+      ctx.fillStyle = isMoving ? "rgba(124,92,255,.18)" : "rgba(255,255,255,.10)";
+      ctx.fillRect(p.x,p.y,p.w,p.h);
+
+      ctx.strokeStyle = isMoving ? "rgba(124,92,255,.40)" : "rgba(255,255,255,.14)";
+      ctx.strokeRect(p.x,p.y,p.w,p.h);
+    }
+
+    // spikes
+    for(const s of level.spikes){
+      ctx.fillStyle = "rgba(255,77,125,.70)";
+      const spikes = Math.max(2, Math.floor(s.w/16));
+      const step = s.w / spikes;
+      for(let i=0;i<spikes;i++){
+        const x0 = s.x + i*step;
+        ctx.beginPath();
+        ctx.moveTo(x0, s.y + s.h);
+        ctx.lineTo(x0 + step/2, s.y);
+        ctx.lineTo(x0 + step, s.y + s.h);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    // goal door
+    const g = level.goal;
+    const glow = 0.45 + 0.25*Math.sin(performance.now()/220);
+    ctx.fillStyle = `rgba(124,92,255,${0.25+glow*0.25})`;
+    ctx.fillRect(g.x-10, g.y-10, g.w+20, g.h+20);
+    ctx.fillStyle = "rgba(124,92,255,.78)";
+    ctx.fillRect(g.x,g.y,g.w,g.h);
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.fillRect(g.x+g.w-8, g.y+g.h/2-6, 5, 10);
+
+    // PLAYER sprite aligned to hitbox feet
+    if(spriteReady){
+      const drawW = 80;
+      const drawH = 150;
+      ctx.drawImage(
+        sprite,
+        0, 0, sprite.width, sprite.height,
+        player.x + player.w/2 - drawW/2,
+        player.y + player.h - drawH,
+        drawW, drawH
+      );
+    } else {
+      ctx.fillStyle = "rgba(255,77,125,.35)";
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+    }
+
+    // HUD
+    ctx.fillStyle = "rgba(243,246,255,.82)";
+    ctx.font = "950 14px ui-sans-serif, system-ui";
+    ctx.fillText(`Level ${STATE.level} • Jump: Space • Double Jump: yes`, 14, 24);
+    ctx.fillText(`Reach the door • Avoid spikes • Press R to restart`, 14, 44);
+
+    if(!STATE.running && !overlay.classList.contains("show")){
+      ctx.fillStyle = "rgba(0,0,0,.20)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "rgba(243,246,255,.92)";
+      ctx.font = "1000 34px ui-sans-serif, system-ui";
+      const msg = "Press Start 💘";
+      const w = ctx.measureText(msg).width;
+      ctx.fillText(msg, (canvas.width-w)/2, canvas.height/2);
+    }
+  }
+
+  function loop(t){
+    const time = t/1000;
+    const dt = Math.min(0.033, time - (STATE.lastT || time));
+    STATE.lastT = time;
+
+    step(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // Key handlers
+  window.addEventListener("keydown", (e) => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    keys.add(k);
+    if(k === "r" && !overlay.classList.contains("show")){
+      loadLevel(STATE.level);
+      STATE.running = true;
+      beep(520, 0.06, "sine", 0.03);
+    }
+  });
+  window.addEventListener("keyup", (e) => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    keys.delete(k);
+  });
+
+  startBtn.addEventListener("click", () => {
+    if(!STATE.running){
+      STATE.running = true;
+      statusPill.textContent = "Level " + STATE.level;
+      beep(740, 0.08, "sine", 0.04);
+    }
+  });
+
+  muteBtn.addEventListener("click", () => {
+    STATE.muted = !STATE.muted;
+    muteBtn.textContent = STATE.muted ? "🔇 Muted" : "🔊 Sound";
+    beep(520, 0.05, "sine", 0.03);
+  });
+
+  // Init
+  loadLevel(1);
+  deathText.textContent = 0;
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
